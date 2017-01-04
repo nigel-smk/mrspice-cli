@@ -38,6 +38,8 @@ class AndCountService:
         progress.start()
 
         for recipe in cursor:
+            # TODO try collecting counts into a dictionary and then updating less frequently
+            # TODO Also play with batch size
             bulk = self.destination.initialize_unordered_bulk_op()
 
             ingredients = recipe['ingredients']

@@ -38,6 +38,8 @@ class AndCountService:
         progress.start()
 
         for recipe in cursor:
+            bulk = self.destination.initialize_unordered_bulk_op()
+
             ingredients = recipe['ingredients']
             ingredients.sort()
 
@@ -53,9 +55,8 @@ class AndCountService:
                     c = list(c)
                     c.sort()
                     combo_id = '::'.join(c)
-                    self.destination.update_one(
-                        {"_id": combo_id},
-                        {
+                    bulk.find({"_id": combo_id}).upsert()\
+                        .update({
                             "$set": {
                                 "_id": combo_id,
                                 "r": r,
@@ -64,9 +65,11 @@ class AndCountService:
                             "$inc": {
                                 "and_count": 1
                             }
-                        },
-                        upsert=True
+                        }
                     )
+            # TODO handle writeErrors
+            bulk.execute()
+
             processed += 1
             progress.update(processed)
 

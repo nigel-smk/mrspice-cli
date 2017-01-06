@@ -1,7 +1,8 @@
 from repository import Repository
-from progress_bar import Progress
+from progress_bar import ProgressBar
 import random
 import re
+
 
 def sample_collection(**kwargs):
     """exceptions:
@@ -23,7 +24,7 @@ def sample_collection(**kwargs):
     to_sample = random.sample(range(0, record_count), sample_size)
     to_sample.sort()
 
-    progress = Progress(sample_size)
+    progress = ProgressBar(sample_size, "records sampled")
     progress.start()
 
     cursor = source.find()

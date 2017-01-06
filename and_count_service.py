@@ -1,5 +1,5 @@
 from repository import Repository
-from count_progress_bar import CountProgress
+from progress_bar import ProgressBar
 import itertools
 
 
@@ -34,7 +34,7 @@ class AndCountService:
         else:
             processed = 0
 
-        progress = CountProgress(recipe_count)
+        progress = ProgressBar(recipe_count, "recipes processed")
         progress.start()
 
         for recipe in cursor:

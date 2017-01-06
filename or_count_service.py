@@ -1,5 +1,5 @@
 from repository import Repository
-from or_count_progress_bar import CountProgress
+from progress_bar import ProgressBar
 import itertools
 import functools
 
@@ -46,7 +46,7 @@ class OrCountService:
         else:
             processed = 0
 
-        progress = CountProgress(combination_count)
+        progress = ProgressBar(combination_count, "ors counted")
         progress.start()
 
         BULK_LIMIT = 1000
@@ -83,11 +83,13 @@ class OrCountService:
                 bulk.execute()
                 bulk = self.source.initialize_unordered_bulk_op()
 
+        progress.update(processed)
         bulk.execute()
         cursor.close()
         progress.end()
 
-    # lru cache with max size of 2 billion
-    @functools.lru_cache(2 * 10**9)
+    # 2 billion is too big for current settings
+    # lru cache with max size of 1 billion
+    @functools.lru_cache(1 * 10**9)
     def get_and_count_by_id(self, combo_id):
         return self.source.find_one({"_id": combo_id})['and_count']

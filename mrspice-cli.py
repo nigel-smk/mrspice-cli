@@ -2,8 +2,9 @@ import click
 import sample_service
 from and_count_service import AndCountService
 from or_count_service import OrCountService
-import tokenize_service
+from link_service import LinkService
 
+# TODO validate arguments and options here
 
 @click.group()
 def dbutils():
@@ -44,15 +45,32 @@ def count_and(**kwargs):
 def count_or(**kwargs):
     OrCountService(**kwargs).count_or()
 
+
 @dbutils.command()
 @click.option('--host', default='mongodb://localhost:27017', help='database host')
-@click.option('--skip', default=0, help='number of combinations to skip in the source')
+@click.option('--skip', default=0, help='number of recipes to skip in the source')
 @click.option('--r_min', default=1)
 @click.option('--r_max')
 @click.argument('database')
 @click.argument('source')
-def tokenize(**kwargs):
-    tokenize_service.tokenize(**kwargs)
+def link(**kwargs):
+    LinkService(**kwargs).link()
+
+
+@dbutils.command()
+@click.option('--host', default='mongodb://localhost:27017', help='database host')
+@click.option('--skip', default=0, help='number of recipes to skip in the source')
+@click.option('--r_min', default=1)
+@click.option('--r_max')
+@click.argument('database')
+@click.argument('source')
+@click.argument('destination')
+def precalc(**kwargs):
+    AndCountService(**kwargs).count_and()
+    kwargs['source'] = kwargs['destination']
+    OrCountService(**kwargs).count_or()
+    LinkService(**kwargs).link()
+
 
 if __name__ == '__main__':
     dbutils()

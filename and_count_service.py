@@ -1,3 +1,4 @@
+import output
 from repository import Repository
 from progress_bar import ProgressBar
 import itertools
@@ -7,8 +8,8 @@ class AndCountService:
 
     def __init__(self, **kwargs):
         self.db = Repository(kwargs.get('host'), kwargs.get('database'))
-        self.source = self.db.get_collection(kwargs.get('source'))
-        self.destination = self.db.get_collection(kwargs.get('destination'))
+        self.recipes = self.db.get_collection(kwargs.get('recipes'))
+        self.combinations = self.db.get_collection(kwargs.get('combinations'))
         self.skip = kwargs.get('skip')
         self.r_min = kwargs.get('r_min')
         self.r_max = kwargs.get('r_max')
@@ -25,8 +26,8 @@ class AndCountService:
         # TODO register exit handler to print recipes processed on unexpected exit
         # TODO https://docs.python.org/3/library/atexit.html
 
-        recipe_count = self.source.count()
-        cursor = self.source.find(no_cursor_timeout=True)
+        recipe_count = self.recipes.count()
+        cursor = self.recipes.find(no_cursor_timeout=True)
         # TODO timeout=False is bad practice
         if self.skip:
             cursor.skip(self.skip)
@@ -34,13 +35,14 @@ class AndCountService:
         else:
             processed = 0
 
-        progress = ProgressBar(recipe_count, "recipes processed")
+        output.push("Counting ands...")
+        progress = ProgressBar(recipe_count)
         progress.start()
 
         for recipe in cursor:
             # TODO try collecting counts into a dictionary and then updating less frequently
             # TODO Also play with batch size
-            bulk = self.destination.initialize_unordered_bulk_op()
+            bulk = self.combinations.initialize_unordered_bulk_op()
 
             ingredients = recipe['ingredients']
             ingredients.sort()

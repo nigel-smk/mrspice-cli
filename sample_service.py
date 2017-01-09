@@ -15,8 +15,13 @@ def sample_collection(**kwargs):
     db = Repository(kwargs['host'], kwargs['database'])
     source = db.get_collection(kwargs['source'])
     destination = db.get_collection(kwargs['destination'])
+    # TODO pass filter in from json file
+    doc_filter = {'attributes': {'$gt': {}}, 'attributes.course': {'$nin': ['Desserts', 'Cocktails', 'Beverages']}}
 
-    record_count = source.count()
+    if doc_filter:
+        record_count = source.count(doc_filter)
+    else:
+        record_count = source.count()
     seed = kwargs['seed']
     sample_size = parse_number(kwargs['size'])
 
@@ -24,14 +29,18 @@ def sample_collection(**kwargs):
     to_sample = random.sample(range(0, record_count), sample_size)
     to_sample.sort()
 
-    progress = ProgressBar(sample_size, "records sampled")
+    progress = ProgressBar(sample_size)
     progress.start()
 
-    cursor = source.find()
+    if doc_filter:
+        cursor = source.find(doc_filter)
+    else:
+        cursor = source.find()
+
     sample_count = 0
     position = 0
     for index in to_sample:
-        while position < index:
+        while position <= index:
             record = cursor.next()
             position += 1
         # TODO batch insert?

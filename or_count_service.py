@@ -1,3 +1,4 @@
+import output
 from repository import Repository
 from progress_bar import ProgressBar
 import itertools
@@ -11,7 +12,7 @@ class OrCountService:
         self.database = kwargs.get('database')
 
         self.db = Repository(self.host, self.database)
-        self.source = self.db.get_collection(kwargs.get('source'))
+        self.combinations = self.db.get_collection(kwargs.get('combinations'))
 
         self.r_min = int(kwargs["r_min"])
         self.r_max = int(kwargs["r_max"])
@@ -36,8 +37,8 @@ class OrCountService:
             }
         }
 
-        combination_count = self.source.count(combo_filter)
-        cursor = self.source.find(combo_filter, no_cursor_timeout=True)
+        combination_count = self.combinations.count(combo_filter)
+        cursor = self.combinations.find(combo_filter, no_cursor_timeout=True)
 
         # TODO timeout=False is bad practice
         if self.skip:
@@ -46,11 +47,12 @@ class OrCountService:
         else:
             processed = 0
 
-        progress = ProgressBar(combination_count, "ors counted")
+        progress = ProgressBar(combination_count)
+        output.push("Counting ors...")
         progress.start()
 
         BULK_LIMIT = 1000
-        bulk = self.source.initialize_unordered_bulk_op()
+        bulk = self.combinations.initialize_unordered_bulk_op()
         for combination in cursor:
 
             combo_id = combination['_id']
@@ -70,18 +72,19 @@ class OrCountService:
             bulk.find({"_id": combo_id}).update(
                 {
                     "$set": {
-                        "or_count": or_count
+                        "or_count": or_count,
+                        "score": float(combination['and_count']) / or_count
                     }
                 }
             )
 
             processed += 1
-            progress.update(processed)
 
             if processed % BULK_LIMIT == 0:
                 # TODO handle bulk execute errors
+                progress.update(processed)
                 bulk.execute()
-                bulk = self.source.initialize_unordered_bulk_op()
+                bulk = self.combinations.initialize_unordered_bulk_op()
 
         progress.update(processed)
         bulk.execute()
@@ -92,4 +95,4 @@ class OrCountService:
     # lru cache with max size of 1 billion
     @functools.lru_cache(1 * 10**9)
     def get_and_count_by_id(self, combo_id):
-        return self.source.find_one({"_id": combo_id})['and_count']
+        return self.combinations.find_one({"_id": combo_id})['and_count']

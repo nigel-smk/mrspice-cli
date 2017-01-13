@@ -1,7 +1,8 @@
-from repository import Repository
-from progress_bar import ProgressBar
 import random
 import re
+
+from common.progress_bar import ProgressBar
+from repository.repository import Repository
 
 
 def sample_collection(**kwargs):
@@ -16,7 +17,18 @@ def sample_collection(**kwargs):
     source = db.get_collection(kwargs['source'])
     destination = db.get_collection(kwargs['destination'])
     # TODO pass filter in from json file
-    doc_filter = {'attributes': {'$gt': {}}, 'attributes.course': {'$nin': ['Desserts', 'Cocktails', 'Beverages']}}
+    doc_filter = {
+        'attributes': {
+            '$gt': {}
+        },
+        'attributes.course': {
+            '$nin': ['Desserts', 'Cocktails', 'Beverages']
+        },
+        'rating': {
+            '$gte': 4,
+            '$lte': 5
+        }
+    }
 
     if doc_filter:
         record_count = source.count(doc_filter)

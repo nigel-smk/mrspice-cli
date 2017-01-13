@@ -1,8 +1,10 @@
-import output
-from repository import Repository
-from progress_bar import ProgressBar
-import itertools
 import functools
+import itertools
+
+from common import output
+
+from common.progress_bar import ProgressBar
+from repository.repository import Repository
 
 
 class OrCountService:
@@ -64,6 +66,8 @@ class OrCountService:
             for r in range(1, len(ingredients) + 1):
                 combinations = itertools.combinations(ingredients, r)
                 for c in combinations:
+                    c = list(c)
+                    c.sort()
                     c_id = '::'.join(c)
                     and_count = self.get_and_count_by_id(c_id)
                     or_count += and_count * add_sub
@@ -91,8 +95,9 @@ class OrCountService:
         cursor.close()
         progress.end()
 
-    # 2 billion is too big for current settings
-    # lru cache with max size of 1 billion
-    @functools.lru_cache(1 * 10**9)
+    # 1 billion is too big for current settings
+    # lru cache with max size of 0.5 billion
+    # TODO look into changing memory allowance for user running this process. Also limit mongo's max memory
+    @functools.lru_cache(5 * 10**8)
     def get_and_count_by_id(self, combo_id):
         return self.combinations.find_one({"_id": combo_id})['and_count']

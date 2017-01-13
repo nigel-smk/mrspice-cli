@@ -1,7 +1,9 @@
-import output
-from repository import Repository
-from progress_bar import ProgressBar
 import itertools
+
+from common import output
+
+from common.progress_bar import ProgressBar
+from repository.repository import Repository
 
 
 class AndCountService:
@@ -49,30 +51,31 @@ class AndCountService:
 
             # for each possible length of combinations between r_min and r_max
             r_min = int(self.r_min)
-            r_max = self.r_max
+            r_max = int(self.r_max)
             r_max = int(r_max) if r_max and len(ingredients) > int(r_max) else len(ingredients)
-            for r in range(r_min, r_max + 1):
-                combinations = itertools.combinations(ingredients, r)
-                # for each combination of that length
-                for c in combinations:
-                    # ensure that ingredients in id are alphabetically ordered
-                    c = list(c)
-                    c.sort()
-                    combo_id = '::'.join(c)
-                    bulk.find({"_id": combo_id}).upsert()\
-                        .update({
-                            "$set": {
-                                "_id": combo_id,
-                                "r": r,
-                                "ingredients": c
-                            },
-                            "$inc": {
-                                "and_count": 1
+            if r_min <= r_max:
+                for r in range(r_min, r_max + 1):
+                    combinations = itertools.combinations(ingredients, r)
+                    # for each combination of that length
+                    for c in combinations:
+                        # ensure that ingredients in id are alphabetically ordered
+                        c = list(c)
+                        c.sort()
+                        combo_id = '::'.join(c)
+                        bulk.find({"_id": combo_id}).upsert()\
+                            .update({
+                                "$set": {
+                                    "_id": combo_id,
+                                    "r": r,
+                                    "ingredients": c
+                                },
+                                "$inc": {
+                                    "and_count": 1
+                                }
                             }
-                        }
-                    )
-            # TODO handle writeErrors
-            bulk.execute()
+                        )
+                # TODO handle writeErrors
+                bulk.execute()
 
             processed += 1
             progress.update(processed)

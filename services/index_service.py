@@ -1,4 +1,4 @@
-from repository import Repository
+from repository.repository import Repository
 
 
 class IndexService:

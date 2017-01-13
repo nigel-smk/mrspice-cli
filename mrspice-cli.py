@@ -1,16 +1,18 @@
-import click
 import time
 
-import output
-import progress_bar
-import sample_service
-from and_count_service import AndCountService
-from or_count_service import OrCountService
-from link_service import LinkService
-from index_service import IndexService
-from sort_service import SortService
+import click
+from common import output
+from services import sample_service
+from services.index_service import IndexService
+from services.link_service import LinkService
+from services.or_count_service import OrCountService
+from services.populate_graph_service import PopulateGraphService
+from services.sort_service import SortService
+from services.yummly_ingredients_service import YummlyIngredientsService
 
-# TODO validate arguments and options here
+from common import progress_bar
+from services.and_count_service import AndCountService
+from services.usda_service import USDAService
 
 
 @click.group()
@@ -89,10 +91,35 @@ def precalc(**kwargs):
     AndCountService(**kwargs).count_and()
     OrCountService(**kwargs).count_or()
     LinkService(**kwargs).link()
+    SortService(**kwargs).sort_pairings()
     end = time.time()
     elapsed = progress_bar._format_time(end - start)
     output.push("Total elapsed: {elapsed}".format(elapsed=elapsed))
 
+
+@dbutils.command()
+@click.option('--host', default='mongodb://localhost:27017', help='database host')
+@click.argument('database')
+@click.argument('collection')
+def usda_foods(**kwargs):
+    USDAService(**kwargs).get_foods()
+
+
+@dbutils.command()
+@click.option('--host', default='mongodb://localhost:27017', help='database host')
+@click.argument('database')
+@click.argument('collection')
+def fetch_yum_ingts(**kwargs):
+    YummlyIngredientsService(**kwargs).get_ingredients()
+
+
+@dbutils.command()
+@click.option('--host', default='mongodb://localhost:27017', help='database host')
+@click.option('--neoHost', default='http://neo4j:1234@localhost:7474/db/data')
+@click.argument('database')
+@click.argument('recipes')
+def populate_graph(**kwargs):
+    PopulateGraphService(**kwargs).populate()
 
 if __name__ == '__main__':
     dbutils()

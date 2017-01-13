@@ -1,5 +1,6 @@
 import time
-import output
+
+from common import output
 
 
 class ProgressBar:

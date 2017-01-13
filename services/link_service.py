@@ -1,13 +1,17 @@
-import output
-from repository import Repository
-from progress_bar import ProgressBar
+from common import output
+
+from common.progress_bar import ProgressBar
+from repository.repository import Repository
 
 
-class LinkService():
+class LinkService:
 
     def __init__(self, **kwargs):
         self.host = kwargs.get('host')
         self.database = kwargs.get('database')
+        self.resume = kwargs.get('resume')
+        self.r_min = int(kwargs["r_min"])
+        self.r_max = int(kwargs["r_max"])
 
         self.db = Repository(self.host, self.database)
         self.combinations = self.db.get_collection(kwargs.get('combinations'))
@@ -20,30 +24,33 @@ class LinkService():
         # TODO take r from options if present
 
         # TODO get max/min r in combinations
-        r_max = int(self.combinations.find({}).sort([("r", -1)]).limit(1).next()['r'])
-        r_min = int(self.combinations.find({}).sort([("r", 1)]).limit(1).next()['r'])
-        records_count = self.combinations.count({
+        # r_max = int(self.combinations.find({}).sort([("r", -1)]).limit(1).next()['r'])
+        # r_min = int(self.combinations.find({}).sort([("r", 1)]).limit(1).next()['r'])
+
+        if self.r_min == 1:
+            self.r_min += 1
+            if self.r_max < self.r_min:
+                output.push("No combinations linkable...")
+                return
+        record_filter = {
             "r": {
-                "$gt": r_min,
-                "$lte": r_max
+                "$gte": self.r_min,
+                "$lte": self.r_max
             }
-        })
+        }
+
+        records_count = self.combinations.count(record_filter)
 
         progress = ProgressBar(records_count)
         processed = 0
 
-        BULK_LIMIT = 1000
+        BULK_LIMIT = 100
         bulk = self.combinations.initialize_unordered_bulk_op()
 
         output.push("Linking combinations...")
         progress.start()
 
-        cursor = self.combinations.find({
-            "r": {
-                "$gt": r_min,
-                "$lte": r_max
-            }
-        })
+        cursor = self.combinations.find(record_filter, no_cursor_timeout=True)
         for combo in cursor:
             ingredients = list(combo['ingredients'])
             combo_id = combo['_id']

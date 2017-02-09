@@ -36,6 +36,9 @@ class OrCountService:
             "r": {
                 "$gte": self.r_min,
                 "$lte": self.r_max
+            },
+            "or_count": {
+                "$exists": False
             }
         }
 
@@ -98,6 +101,6 @@ class OrCountService:
     # 1 billion is too big for current settings
     # lru cache with max size of 0.5 billion
     # TODO look into changing memory allowance for user running this process. Also limit mongo's max memory
-    @functools.lru_cache(5 * 10**8)
+    @functools.lru_cache(5 * 10**6)
     def get_and_count_by_id(self, combo_id):
         return self.combinations.find_one({"_id": combo_id})['and_count']

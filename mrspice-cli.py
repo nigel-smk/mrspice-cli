@@ -73,7 +73,7 @@ def link(**kwargs):
 @click.option('--r_max')
 @click.argument('database')
 @click.argument('combinations')
-def link(**kwargs):
+def sort(**kwargs):
     SortService(**kwargs).sort_pairings()
 
 
@@ -87,8 +87,8 @@ def link(**kwargs):
 @click.argument('combinations')
 def precalc(**kwargs):
     start = time.time()
-    IndexService(**kwargs).index()
-    AndCountService(**kwargs).count_and()
+    # IndexService(**kwargs).index()
+    # AndCountService(**kwargs).count_and()
     OrCountService(**kwargs).count_or()
     LinkService(**kwargs).link()
     SortService(**kwargs).sort_pairings()

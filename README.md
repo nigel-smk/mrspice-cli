@@ -56,7 +56,7 @@ Options:
 ```
 
 ### link
-Given a `COMBINATIONS` collection of `and-counts` and `or-counts`, update each combination with a list of references to other combinations that are of size `r + 1` and include all ingredients from the given combination.
+Given a `COMBINATIONS` collection of `and-counts` and `or-counts`, update each combination of size `r` with a list of references to other combinations that are of size `r + 1` and contain all ingredients from the given combination.
 
 ```
 Usage: mrspice-cli.py link [OPTIONS] DATABASE COMBINATIONS
@@ -70,7 +70,7 @@ Options:
 ```
 
 ### sort
-Given a `COMBINATIONS` collection of `and-counts` and `or-counts` that have been `linked`, sort each combination's references by their `MrSpice score`.
+Given a `COMBINATIONS` collection of `and-counts` and `or-counts` that have been `linked`, sort each combination's references by their `MrSpice score`. The `MrSpice score` of a given combination is the probability that you will find every ingredient of the given combination contained in a recipe, given that you have selected a recipe containing at least one ingredient of the given combination.
 
 ```
 Usage: mrspice-cli.py sort [OPTIONS] DATABASE COMBINATIONS
